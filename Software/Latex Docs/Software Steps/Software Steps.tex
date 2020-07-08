@@ -1,4 +1,4 @@
-\documentclass[12pt]{article}
+\documentclass{article}
 \usepackage[margin=1in]{geometry}
 \usepackage{setspace}
 \usepackage{graphicx}
@@ -11,12 +11,14 @@
 \usepackage{framed}
 \usepackage[dvipsnames]{xcolor}
 \usepackage{xcolor}
+\usepackage[most]{tcolorbox}
 \usepackage{listings}
 \usepackage{color}
 \usepackage{wrapfig}
 \usepackage{float}
 \usepackage{fancyhdr}
 \usepackage{verbatim}
+\usepackage{comment}
 \pagestyle{fancy}
 \lfoot{\textbf{Open Source Rover Software Install}}
 \rfoot{Page \thepage}
@@ -49,6 +51,8 @@
   tabsize=4
 }
 
+\tcbset{width=0.9\textwidth,boxrule=0pt,colback=gray,arc=0pt,auto outer arc,left=0pt,right=0pt,boxsep=5pt}
+
 \begin{document}
 
 \title{Open Source Rover: Software Instructions}
@@ -76,216 +80,85 @@
 
 \newpage
 
+\section{Flashing the Arduino Code}
 
-\section{Setting up the Raspberry Pi 3}
-In this section, we'll go over setting up the Raspberry Pi and how to set up all the code that will run the rover. We will also set up the bluetooth pairing from the android device.
-\subsection{Getting the Raspberry Pi online}
+In this section we will be flashing the code that runs on the arduino to control the LED matrix in the head. The following steps should be performed on your laptop or development machine (not the raspberry pi)
 
-We recommend following the "Getting started with Raspberry Pi" tutorial at:
+\begin{enumerate} 
+\item Install the Arduino IDE used for loading code onto the arduino:
 
-\begin{enumerate}
-	\item[] \href{https://projects.raspberrypi.org/en/projects/raspberry-pi-getting-started}{https://projects.raspberrypi.org/en/projects/raspberry-pi-getting-started}
+	\href{https://www.arduino.cc/en/Main/Software}{https://www.arduino.cc/en/Main/Software}
+
+\item Download the Arduino code:
+	\begin{enumerate}
+	\item Navigate to \href{https://github.com/nasa-jpl/osr-rover-code}{https://github.com/nasa-jpl/osr-rover-code} and click the green 'Clone or download' button. Choose 'Download ZIP'.
+	\item Unzip/extract and open the downloaded zip file. Then, select the Arduino folder and create a new zip file of just that Arduino folder. Name it OsrScreen.zip
+	\end{enumerate}
+
+\item Load the sketch onto the Arduino
+	\begin{enumerate}
+	\item Unplug the Arduino shield JST cable so the Arduino isn't powered by the control board
+	\item Connect the Arduino to your development machine with USB cable
+	\item Open Arduino IDE
+	\item Select Sketch - Include Library - Add .Zip Library 
+	\item Select the OsrScreen.zip folder created previously
+	\item Click the Upload button in the Sketch Window	
+	\end{enumerate}
+
+\item To load the example in the Arduino IDE: 
+	\begin{enumerate}
+	\item File - Examples - OsrScreen - OsrScreen 
+	\end{enumerate}
+
 \end{enumerate}
 
-Once you finish the above tutorial, you should be able to boot your Raspberry Pi and see a desktop.
+\section{Setting up the Raspberry Pi 3}
+In this section, we'll go over setting up the Raspberry Pi and setting up all the code that will run the rover. Our rover uses ROS (Robotic Operating System), which will be installed on the Raspbian operating system; we will set up both of these below.  We will also set up the bluetooth pairing from the android device.
 
-\subsection{Downloading the Rover Code}
-On the Raspberry Pi, open up a terminal \textbf{(ctl + alt + t)} and then type the following commands\footnote{In this document, terminal commands will be \colorbox{lightgray}{highlighted}.}:
+Note that you are free to use other versions of Raspberry Pi, ROS, or OS, but setting these up is not covered here
+and it is not guaranteed that those will work.
 
-\begin{itemize}
-	\item[] \colorbox{lightgray}{cd /home/pi}
-	\item[] \colorbox{lightgray}{git clone https://github.com/nasa-jpl/osr-rover-code osr}
-\end{itemize}
+\subsection{Getting the Raspberry Pi running}
+The first step is to install Raspbian on your Raspberry Pi. To install Raspbian,
+we recommend following the "Getting started with Raspberry Pi" tutorial below.  \textbf{**NOTE: These instructions were tested and verified using Raspbian Stretch.  Newer versions of Raspbian (such as Buster) may cause complications with these instructions.  We therefore recommend installing Raspbian Stretch instead of the latest/default version of Raspbian, which the tutorial below will recommend.  Do not flash NOOBS onto your card; instead download the Raspbian Streth image below and skip the NOOBS step in the tutorial.}  In addition, we have created a pre-built image with both Raspbian Stretch and ROS already installed.  You can download this image as a last resort if you can't get Raspbian and ROS installed and working on your own, but please note that you will miss out on some the learning opportunities that come with debugging a software installation by doing so.  
 
-\subsubsection{Installing packages}
-Run each of the commands below to install the packages you will need to use Bluetooth communication on the Raspberry Pi. Open up a terminal on the Raspberry Pi  and type the following commands:
+\begin{enumerate}
+	\item[] Tutorial for installing the latest version of Raspbian on a new Raspberry Pi:
+	\item[] \href{https://projects.raspberrypi.org/en/projects/raspberry-pi-getting-started}{https://projects.raspberrypi.org/en/projects/raspberry-pi-getting-started}
+	\item[] Direct downloadable Raspbian Stretch image: 
+	\item[] \href{https://downloads.raspberrypi.org/raspbian/images/raspbian-2019-04-09/2019-04-08-raspbian-stretch.zip}{https://downloads.raspberrypi.org/raspbian/images/raspbian-2019-04-09/2019-04-08-raspbian-stretch.zip}
+	\item[] Custom JPL image with both Raspbian Stretch and ROS pre-built:
+	\item[] \href{https://drive.google.com/drive/folders/1RbYWDRthpcktqkPEHb7qVqDiy27EiAc1}{https://drive.google.com/drive/folders/1RbYWDRthpcktqkPEHb7qVqDiy27EiAc1}
+	\item[] \textbf{**NOTE: If you install the Custom JPL image with Raspbian Stretch and ROS pre-built, skip to step 2.4.} 
+\end{enumerate}
+
+\noindent Once you finish the above tutorial and install Raspbian Stretch, you should be able to boot your Raspberry Pi and see a desktop!
+
+\subsection{Installing ROS}
+If you do not download the pre-built Raspbian Stretch / ROS image above, you will need to build ROS yourself:
+
+First, make sure you update all the packages on your pi:
 \begin{itemize}
 	\item[] \colorbox{lightgray}{sudo apt-get update}
 	\item[] \colorbox{lightgray}{sudo apt-get upgrade}
-	\item[] \colorbox{lightgray}{sudo apt-get install python-bluez}
-	\item[] \colorbox{lightgray}{sudo apt-get install python-pip python-dev ipython}
-	\item[] \colorbox{lightgray}{sudo apt-get install bluetooth libbluetooth-dev}
-	\item[] \colorbox{lightgray}{sudo pip install pybluez}
-	\item[] \colorbox{lightgray}{sudo systemctl start bluetooth}
-
-\end{itemize}
-
-\noindent Now you need modify a line of code in the Bluetooth service file. Start by typing:
-\begin{itemize}
-	\item[] \colorbox{lightgray}{sudo nano /lib/systemd/system/bluetooth.service}
-\end{itemize}
-\noindent Add "-C" after 'bluetoothd' on line 9. The file should now look like the Figure \ref{bs}:
-
-\begin{figure}[H]
- 	\centering
-	\includegraphics[width=1\textwidth]{"Pictures/bluetooth service".PNG}
-	\caption{bluetooth.service File}
-	\label{bs}
-\end{figure}
-	
-\noindent Once you have made this change, exit and save (ctrl + x, y, enter), and then reboot the Pi:
-
-\begin{itemize}
-	\item[] \colorbox{lightgray}{sudo reboot}
-\end{itemize}
-
-\noindent Once the Pi has rebooted, open up a terminal and type:
-\begin{itemize}
-	\item[] \colorbox{lightgray}{sudo sdptool add SP}
-\end{itemize}
-
-
-\section{Control Method}
-
-The first thing to do is select which control method you want to use. There are two methods that are already built into the code to control the rover; one is a smartphone app run on Android devices, the other is using a wireless Xbox controller. 
-
-\begin{figure}[H]
- 	\centering
-	\includegraphics[width=.7\textwidth]{"Pictures/control".PNG}
- 	\caption{Control Methods}
-	\label{controls}
-\end{figure}
-
-\noindent Any way that you can communicate to a Raspberry Pi is a way that you can control the rover, and we fully encourage you to find and develop other methods of remote control. For the methods above, if you decide to use an Android device you will need to follow some steps to get the app loaded on your phone. We provide the source code for the app so you can edit and change things on your own; the next section will walk you through getting the source code for the Android app.  If you wish to use the Xbox controller to control your rover, skip to step 2.2.
-
-\subsection{Android App Control}
-If you choose to control the rover from an Android App you'll need to setup Bluetooth communication between the Raspberry Pi and Android device. There are a few different methods of doing this; we'll be using a terminal interface.
-
-\subsubsection{Naming the Bluetooth Device}
-
-On the Raspberry Pi, create a file that will name the Bluetooth device your desired name\footnote{This device name must also be updated in the Android App so that the App finds the correct device. Make sure to keep track of this name}. You can do this by running the following in a terminal: 
-\begin{itemize}
-	\item[] \colorbox{lightgray}{sudo nano /etc/machine-info} 
-\end{itemize}
-\noindent Name your device by replacing deviceName with whatever you want the name of your Raspberry Pi to be (we suggest something like "openSourceRover"):
-
-\begin{figure}[H]
- 	\centering
-	\includegraphics[width=.5\textwidth]{"Pictures/devicename".PNG}
-\end{figure}
-
-\noindent Now edit the /etc/bluetooth/main.conf file: Uncomment the "Name=" line and add your deviceName: 
-\begin{itemize}
-	\item[] \colorbox{lightgray}{sudo nano /etc/bluetooth/main.conf} 
-\end{itemize}
-
-\noindent The first few lines of this file should look like Figure \ref{conf}.
-
-\begin{figure}[H]
- 	\centering
-	\includegraphics[width=1\textwidth]{"Pictures/mainconf".PNG}
-	\caption{bluetooth main.conf File}
-	\label{conf}
-\end{figure}
-
-\subsubsection{Pairing Bluetooth from Command Line}
-We're now ready to pair the Raspberry Pi with your Android device\footnote{We followed the tutorial at \href{https://www.cnet.com/how-to/how-to-setup-bluetooth-on-a-raspberry-pi-3/}{https://www.cnet.com/how-to/how-to-setup-bluetooth-on-a-raspberry-pi-3/} to learn how to pair the Pi with an Android device.}.
-
-Have your Android device discoverable and searching for Bluetooth\footnote{The process for making your phone or tablet discoverable and searching for bluetooth is different for different devices. Feel free to search the web for instructions on how to do this on your specific device.}. Begin by in a terminal starting bluetoothctl:
-\begin{itemize}
-	\item[] \colorbox{lightgray}{sudo bluetoothctl}
-\end{itemize}
-
-\noindent You are now in the bluetoothctl interface. Run the following commands:
-
-\begin{itemize}
-	\item[] \colorbox{lightgray}{agent on}
-	\item[] \colorbox{lightgray}{default-agent}
-	\item[] \colorbox{lightgray}{scan on}
-\end{itemize}
-
-\noindent Once your find your Android device, you'll need to pair to it using its address:
-
-\begin{itemize} 	
-	\item[] \colorbox{lightgray}{pair XX:XX:XX:XX:XX:XX} 
-	\item[] \colorbox{lightgray}{yes}
-\end{itemize}
-	
-\noindent You'll be prompted on the Android device asking to accept the pairing. Select Okay. Now that your Android is paired with the Pi, exit bluetoothctl by running the following on the Pi:
-\begin{itemize}
-	\item[] \colorbox{lightgray}{quit} 
-\end{itemize}
-
-\subsubsection{Downloading the Android App}
-
-To begin, you need to download Android Studio which will allow you to put the source code onto the Android device as an app.  You need to install Android Studio on a laptop or desktop computer, NOT the Raspberry Pi.  Download and install Android Studio from 
-
-\begin{itemize}
-	\item \href{https://developer.android.com/studio/index.html}{https://developer.android.com/studio/index.html}
-\end{itemize}
-
-Android Studio provides lots of support information and forums to help you install the software and then install apps on your Android. Consult the Android Studio documentation if you have any issues installing Android Studio or loading the app onto your Android device.
-
-\noindent In order to allow your Android device to accept the source code as an app, you'll need to enable USB debugging on the Android. This process varies across different version of phones and tablets. The best way to figure out how to turn on USB debugging for your device is to search the web for "android USB debugging" for your specific device and follow the steps that you find.
+\end{itemize} 
+(The above commands may take a few minutes to run.)
 
 \bigskip
 
-\noindent To get the source code for the Android app, you can navigate to the following URL on your laptop/desktop:
+\noindent Next, we will install ROS (and specifically, the version called 'Kinetic').
 
-\begin{itemize}
-	\item[] \href{https://github.com/nasa-jpl/osr-android-app}{https://github.com/nasa-jpl/osr-android-app}
-\end{itemize}
+\textbf{NOTE: Follow the ROS installation directions in the link below CAREFULLY!  Do not ignore warnings, as they will lead to issues later in the installation.  Some known "gotchas" to note before you get started are:}
+\begin{enumerate}
+	\item[] - Make sure you install the Kinetic "desktop\_full" version of ROS, not the desktop ros-comm, or other versions.
+	\item[] - ROS changed their GPG keys as of June 7 2019.  The ROS install instructions do not mention this as of July 2019 and will not work unless you update your GPG keys. See \href{https://discourse.ros.org/t/new-gpg-keys-deployed-for-packages-ros-org/9454}{https://discourse.ros.org/t/new-gpg-keys-deployed-for-packages-ros-org/9454} for instructions on how to update your GPG keys. 
+	\item[] - Make sure you follow directions for KINETIC, not Indigo, Melodic, or any other ROS version. 
+\end{enumerate}
 
-\noindent and under the Clone or Download button click Download ZIP and extract the files in that manner. 
-
-If you wish, you can instead run the following command FROM YOUR LAPTOP/DESKTOP in a terminal from the location on your laptop/desktop where you want to have the source code:
-
-\begin{itemize}
-	\item[] \colorbox{lightgray}{git clone https://github.com/nasa-jpl/osr-android-app}
-\end{itemize}
-
-\bigskip
-
-\noindent Now, open up the source code that you just downloaded in Android Studio. In order for the App to communicate to the Raspberry Pi, you'll need to make sure it selects the correct Bluetooth device.
-
-\begin{itemize}
-	\item In the onClick method in the MainActivity.java file (around line 194), change the \textit{mConnectionName} variable to match whatever you named the Raspberry Pi in the previous section:
-	\begin{lstlisting}
-		...
-		public void onClick(View v) {
-			mConnectionName = "yourDeviceName";  // <---- Change this!
-		...
-	\end{lstlisting}
-	\item Now hit run in the upper panel, and the Android app should build and load onto your Android device:
-\end{itemize}
-
-\begin{figure}[H]
- 	\centering
-	\includegraphics[width=.7\textwidth]{"Pictures/autorun".PNG}
- 	\caption{}
-	\label{}
-\end{figure}
-
-
-\subsection{Init Script}
-We want the rover's code to automatically run whenever the pi boots up. We'll accomplish this by adding it to an init script, /etc/rc.local which is automatically run every time the Pi boots. In a terminal (now back on your Raspberry Pi), run:
-\begin{itemize}
-	\item[] \colorbox{lightgray}{sudo nano /etc/rc.local}
-\end{itemize}
-\noindent The lines we need to add will be added after the "if" block, as shown in Figure \ref{init}. This example is to run with the LED screen and be controlled from the Android app:
-
-\begin{verbatim}
-sudo python /home/pi/osr/led/screen.py &
-sleep 10
-sudo python /home/pi/osr/rover/main.py -s -b &
-\end{verbatim}
-
-\begin{figure}[H]
- 	\centering
-	\includegraphics[width=1\textwidth]{"Pictures/init".PNG}
- 	\caption{/etc/rc.local script.  Note that in this image, we set the \colorbox{yellow}{-b} flag as an example of how to control the rover with the android app}
-	\label{init}
-\end{figure}
-
-The command line arguments that the main.py script accepts are the following:
-
-\begin{itemize}
-	\item[] \textbf{-s} : Attempts to connect to the Unix Socket running in the LED screen script to send commands between the two processes
-	\item[] \textbf{-b} : Initialized a bluetooth socket server to accept a connection for the Android app
-	\item[] \textbf{-x} : Attempts to pull joystick data from an xbox controller connected via USB wireless receiver
-\end{itemize}
-
-If you wish to run your rover without the LED screen, delete line 20 and 21 from /etc/rc.local (those lines start the screen.py script) and remove the -s flag from the line that starts the main.py script.
+\noindent Once you familiarize yourself with the above issues, go ahead and complete your ROS installation by following the instructions at:
+\begin{enumerate}
+	\item[] \href{http://wiki.ros.org/ROSberryPi/Installing%20ROS%20Kinetic%20on%20the%20Raspberry%20Pi}{http://wiki.ros.org/ROSberryPi/Installing\%20ROS\%20Kinetic\%20on\%20the\%20Raspberry\%20Pi}
+\end{enumerate}
 
 \subsection{Setting up serial communication}	
 
@@ -333,26 +206,71 @@ Make sure that this shows serial0 -$>$ ttyS0 . If it does not, ensure that you h
 	\item[] \colorbox{lightgray}{sudo reboot}
 \end{itemize}
 
+\subsection{Building the Rover Code to work with your ROS installation}
+On the Raspberry Pi, open up a terminal \textbf{(ctl + alt + t)} and then type the following commands\footnote{In this document, terminal commands will be \colorbox{lightgray}{highlighted}.}:
 
-\section{Test files}
-There are a few files that will help you test the robot before trying to fully drive it. Having all these tests working does not fully guarantee everything on the rover will work, but they should help with the testing and debugging process.
-
-\subsection{Serial Test}
-
-Under the 'rover' folder there is a script called \textit{serialTest.py}. This will help you test the serial communication of the Raspberry Pi. To begin, use a jumper wire to connect the GPIO14 and GPIO15 pins. 
-
-\begin{figure}[H]
- 	\centering
-	\includegraphics[width=.7\textwidth]{"Pictures/rpi pins".PNG}
- 	\caption{Raspberry Pi pinout}
-	\label{rpi pin}
-\end{figure}
-
-
-Then, run the script from a terminal:
 \begin{itemize}
-	\item[] \colorbox{lightgray}{python /home/pi/osr/rover/serialTest.py}
+	\item[] Create a catkin workspace directory, which will contain all ROS compilation and source code files, and move into it:
+    \item[] \colorbox{lightgray}{mkdir -p \url{~/osr_ws/src} \&\& cd \url{~/osr\_ws}}
+	\item[] Build a basic, empty catkin project: \colorbox{lightgray}{catkin\_make}
+	\item[] If this doesn't report any errors, check if there are two new directories: \colorbox{lightgray}{ls \url{~/osr_ws/build}} and \colorbox{lightgray}{ls \url{~/osr_ws/devel}} should \textbf{not} report 'No such file or directory'
 \end{itemize}
 
-If the serial communication is working properly, this script will let you know that it successfully read data over the serial pins. If it does not, verify that you have followed all the steps in this document to get serial communication working, and that you are connecting GPIO pins 14 and 15 together. 
+\begin{itemize}
+	\item[] Source your newly created ROS environment: 
+	\item[] \colorbox{lightgray}{source /opt/ros/kinetic/setup.bash}
+	\item[] \colorbox{lightgray}{source \url{~/osr\_ws/devel/setup.bash}}
+\end{itemize}
+
+\noindent Use nano (or your editor of choice) to add the above two 'source' commands to the end of your $\sim$/.bashrc file, each on its own line. This will run those lines for you every time you open a new terminal window so you don't have to manually run those each time.
+\begin{itemize}
+	\item[] \colorbox{lightgray}{sudo nano \url{~/.bashrc}}
+\end{itemize}
+
+Now continue the installation steps at \href{https://github.com/nasa-jpl/osr-rover-code}{https://github.com/nasa-jpl/osr-rover-code}.
+
+\bigskip 
+
+\subsection{Init Script}
+
+Starting scripts on boot using ROS can be a little more difficult than starting scripts on boot normally from the Raspberry Pi because of the default permission settings on the RPi and the fact that that ROS cannot be ran as the root user. The way that we will starting our rover code automatically on boot is to create a service that starts our roslaunch script, and then automatically run that service on boot of the robot. Further information on system service scripts running at boot can be found at: 
+
+\begin{itemize}
+	\item \href{https://www.linode.com/docs/quick-answers/linux/start-service-at-boot/}{https://www.linode.com/docs/quick-answers/linux/start-service-at-boot/}. 
+\end{itemize}
+
+There are two scripts in the "Software/Init Scripts" folder. The first is the bash file that runs the roslaunch file, and the other creates a system service to start that bash script. Open up a terminal on the raspberry Pi and execute the following commands.
+
+\begin{itemize}
+	\item[] \colorbox{lightgray}{cd /home/pi/osr/Init\textbackslash\ Scripts}
+	\item[] \colorbox{lightgray}{sudo cp LaunchOSR.sh /usr/bin/LaunchOSR.sh}
+	\item[] \colorbox{lightgray}{sudo chmod +x /usr/bin/LaunchOSR.sh}
+	\item[] \colorbox{lightgray}{sudo cp osr\_startup.service /etc/systemd/system/osr\_startup.service}
+	\item[] \colorbox{lightgray}{sudo chmod 644 /etc/systemd/system/osr\_startup.service}
+\end{itemize}
+
+\noindent Your osr\_startup service is now installed on the Pi and ready to be used. The following are some commands related to managing this service which you might find useful:
+
+\begin{table}[H]
+	\centering
+		\begin{tabular}{| l | l |}
+		\hline
+		\textbf{Desciption} & \textbf{Command} \\ \hline
+		Start service & sudo systemctl start osr\_startup.service \\ \hline
+		Stop service & sudo systemctl stop osr\_startup.service \\ \hline
+		Enable service (runs on boot of RPi) & sudo systemctl enable osr\_startup.service \\ \hline
+		Disable service (doesn't run on boot of RPi) & sudo systemctl disable osr\_startup.service \\ \hline
+		Check status of service & sudo systemctl status osr\_startup.service \\ \hline
+		View live service list & sudo journalctl -f \\ \hline
+		\end{tabular}
+\end{table}
+
+\textbf{Note: We do not recommend enabling the service until you have verified that everything on your robot runs successfully manually.  Once you enable the service, as soon as you power on the RPi it will try and run everything. This could cause issues if everything has not yet been fully tested and verified. Additionally, if you are doing development of your own software for the robot we suggest disabling the service and doing manual launch of the scripts during testing phases. This will help you more easily debug any issues with your code.} Once you have fully tested the robot and made sure that everything is running correctly by starting the rover code manually via \colorbox{lightgray}{roslaunch osr\_bringup osr.launch}, enable the startup service on the robot with the command below:
+
+\begin{itemize}
+	\item[] \colorbox{lightgray}{sudo systemctl enable osr\_startup.service}
+\end{itemize}
+
+At this point, your rover should be fully functional and automatically run whenever you boot it up!  Congratulations and happy roving!!
+
 \end{document}
